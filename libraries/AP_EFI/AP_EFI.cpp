@@ -27,7 +27,11 @@
 #include <AP_CANManager/AP_CANManager.h>
 #endif
 
+#define D1 1  
+#define D2 13.5
+
 extern const AP_HAL::HAL& hal;
+
 
 // table of user settable parameters
 const AP_Param::GroupInfo AP_EFI::var_info[] = {
@@ -68,6 +72,7 @@ AP_EFI::AP_EFI()
 // Initialize backends based on existing params
 void AP_EFI::init(void)
 {
+    source = hal.analogin->channel(4);
     if (backend != nullptr) {
         // Init called twice, perhaps
         return;
@@ -107,6 +112,25 @@ void AP_EFI::update()
 #endif
     }
 }
+/*----------------------------------------------------------------*/ 
+bool AP_EFI::get_fuel_level(float &fl)
+{
+  AP_AHRS &ahrs = AP::ahrs();
+  if(source == nullptr) 
+  {
+    return false;
+  }
+  if(source->set_pin(4))
+  {
+    fl = source->voltage_average_ratiometric()*21.2;
+    X=ahrs.roll;
+    Y=ahrs.pitch;
+    f2=fl+D2*tan(Y);
+    fl = (11*34*f2)/1000;
+  }
+return true;
+}
+/*-----------------------------------------------------------------*/
 
 bool AP_EFI::is_healthy(void) const
 {
@@ -132,6 +156,7 @@ void AP_EFI::log_status(void)
 // @Field: OilP: Oil Pressure
 // @Field: OilT: Oil temperature
 // @Field: FP: Fuel Pressure
+// @Field: FL: Fuel Level 
 // @Field: FCR: Fuel Consumption Rate
 // @Field: CFV: Consumed fueld volume
 // @Field: TPS: Throttle Position
@@ -227,13 +252,15 @@ void AP_EFI::send_mavlink_status(mavlink_channel_t chan)
     if (!backend) {
         return;
     }
+    ftl=0;
     mavlink_msg_efi_status_send(
         chan,
         AP_EFI::is_healthy(),
         state.ecu_index,
         state.engine_speed_rpm,
         state.estimated_consumed_fuel_volume_cm3,
-        state.fuel_consumption_rate_cm3pm,
+        //state.fuel_consumption_rate_cm3pm,
+        get_fuel_level(ftl)?ftl:0,
         state.engine_load_percent,
         state.throttle_position_percent,
         state.spark_dwell_time_ms,

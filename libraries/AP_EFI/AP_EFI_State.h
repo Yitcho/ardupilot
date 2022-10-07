@@ -133,6 +133,9 @@ struct EFI_State {
  
     // If there is an error that does not fit other error types
     bool general_error;
+    
+    // 
+    bool get_fuel_level;
 
     // Error/status fields 
     Crankshaft_Sensor_Status crankshaft_sensor_status;
@@ -181,7 +184,7 @@ struct EFI_State {
     // Estimate of the consumed fuel since the start of the engine (centimeter^3)
     // This variable is reset when the engine is stopped.
     float estimated_consumed_fuel_volume_cm3;
-
+    
     // Throttle position (percent)
     uint8_t throttle_position_percent;
 

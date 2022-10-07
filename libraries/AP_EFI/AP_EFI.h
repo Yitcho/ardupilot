@@ -15,9 +15,13 @@
 
 #pragma once
 
+
 #include <AP_Common/AP_Common.h>
 #include <AP_Param/AP_Param.h>
 #include <GCS_MAVLink/GCS_MAVLink.h>
+#include <AP_HAL/AP_HAL.h>
+#include <AP_Math/AP_Math.h>
+#include <AP_AHRS/AP_AHRS.h>
 
 #ifndef HAL_EFI_ENABLED
 #define HAL_EFI_ENABLED !HAL_MINIMIZE_FEATURES && BOARD_FLASH_SIZE > 1024
@@ -26,6 +30,7 @@
 #if HAL_EFI_ENABLED
 #include "AP_EFI_Backend.h"
 #include "AP_EFI_State.h"
+
 
 
 /*
@@ -47,9 +52,11 @@ class AP_EFI {
 public:
     friend class AP_EFI_Backend;
 
+    // For fuel level reading 
+    bool get_fuel_level(float &fl);
     // For parameter initialization
     AP_EFI();
-
+   
     // Initializes backend
     void init(void);
 
@@ -97,7 +104,7 @@ protected:
     // Back end Parameters
     AP_Float coef1;
     AP_Float coef2;
-
+    float ftl,f2,X,Y;
     EFI_State state;
 
 private:
@@ -113,6 +120,16 @@ private:
 
     // write to log
     void log_status();
+    
+    // source variable to read data from ADC
+    
+     AP_HAL::AnalogSource *source ;
+    
+    // Les dimensions 
+    
+    
+    
+     
 };
 
 namespace AP {
